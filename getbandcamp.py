@@ -48,13 +48,13 @@ def get_bandname(url):
 # get singles -> return only singles
 def get_singles(band_id):
     data = get_json(BC_API_RECORDS, band_id)
-    singles = []
+    singles = {}
     if data['discography']:
         for disc in data['discography']:
             if not disc.has_key('album_id'):
                 if disc['track_id']:
                      trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
-                     singles.append(trackinfo['streaming_url'])
+                     singles[trackinfo['title']] = trackinfo['streaming_url'];
 
         return singles
 
@@ -66,14 +66,14 @@ def get_record_tracks(band_id):
             if disc.has_key('album_id'):
                 records.append(disc['album_id'])
 
-    tracks=[]
+    record = {}
     for disc_id in records:
         disc = get_json(BC_API_ALBUM, str(disc_id))
-        if disc['tracks']:
-            for track in disc['tracks']:
-                tracks.append(track['streaming_url'])
+        record[disc['title']] = {}
+        for track in disc['tracks']:
+            record[disc['title']][track['title']] = track['streaming_url']
 
-    return tracks
+    return record
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
