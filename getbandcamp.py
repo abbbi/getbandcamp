@@ -1,8 +1,25 @@
 #!/usr/bin/python
+import argparse
 import json
 import requests
 from bs4 import BeautifulSoup
 from urllib import quote_plus
+from sys import exit
+from os import mkdir, path
+
+# python getbandcamp.py --url http://usroyalty.bandcamp.com --output destdir
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--url", help="URL to bandpage on bandcamp", type=str, required=1)
+parser.add_argument("--output", help="destination directory to write files in (default: download)", default="download")
+args = parser.parse_args()
+
+if not path.exists(args.output):
+    print "Creating output directory"
+    try:
+        mkdir(args.output)
+    except OSError, e:
+        print "Error creating directory:" + e.strerror
 
 # <meta property="og:site_name"  = band name
 # = band_id : http://api.bandcamp.com/api/band/3/search?key=vatnajokull&name=U.S.%20Royalty
@@ -10,8 +27,21 @@ from urllib import quote_plus
 # = record + download URL: http://api.bandcamp.com/api/album/2/info?key=vatnajokull&album_id=4101846944
 # track= http://api.bandcamp.com/api/track/3/info?key=vatnajokull&track_id=1269403107&
 
-resp = requests.get(url="http://usroyalty.bandcamp.com")
-data = resp.content
+# fetch stuff, turn into funcation/class later
+try:
+    resp = requests.get(url=args.url)
+
+    if resp.status_code == requests.codes.ok:
+        data = resp.content
+    else:
+        print "Error fetching page, error:" + str(resp.status_code)
+        exit(1)
+
+except requests.ConnectionError, e:
+    print "Error fetching page:" + str(e)
+    exit(1)
+except requests.HTTPError, e:
+    print "Error reading HTTP response:" + str(e)
 
 soup = BeautifulSoup(data)
 

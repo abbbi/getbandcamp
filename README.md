@@ -1,4 +1,4 @@
 getbandcamp
 ===========
 
-bandcamp download
+bandcamp download, not yet finished
