@@ -9,82 +9,96 @@ from os import mkdir, path
 
 # python getbandcamp.py --url http://usroyalty.bandcamp.com --output destdir
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--url", help="URL to bandpage on bandcamp", type=str, required=1)
-parser.add_argument("--output", help="destination directory to write files in (default: download)", default="download")
-args = parser.parse_args()
+BC_API_BANDID="http://api.bandcamp.com/api/band/3/search?key=vatnajokull&name="
+BC_API_RECORDS="http://api.bandcamp.com/api/band/3/discography?key=vatnajokull&band_id="
+BC_API_ALBUM="http://api.bandcamp.com/api/album/2/info?key=vatnajokull&album_id="
+BC_API_TRACKS="http://api.bandcamp.com/api/track/3/info?key=vatnajokull&track_id="
 
-if not path.exists(args.output):
-    print "Creating output directory"
+def get_url(url):
     try:
-        mkdir(args.output)
-    except OSError, e:
-        print "Error creating directory:" + e.strerror
-
-# <meta property="og:site_name"  = band name
-# = band_id : http://api.bandcamp.com/api/band/3/search?key=vatnajokull&name=U.S.%20Royalty
-# = discography : http://api.bandcamp.com/api/band/3/discography?key=vatnajokull&band_id=203035041
-# = record + download URL: http://api.bandcamp.com/api/album/2/info?key=vatnajokull&album_id=4101846944
-# track= http://api.bandcamp.com/api/track/3/info?key=vatnajokull&track_id=1269403107&
-
-# fetch stuff, turn into funcation/class later
-try:
-    resp = requests.get(url=args.url)
-
-    if resp.status_code == requests.codes.ok:
-        data = resp.content
-    else:
-        print "Error fetching page, error:" + str(resp.status_code)
+            resp = requests.get(url=url)
+            if resp.status_code == requests.codes.ok:
+                data = resp.content
+                return data
+            else:
+                print "Error fetching page, error:" + str(resp.status_code)
+                exit(1)
+    except requests.ConnectionError, e:
+        print "Error fetching page:" + str(e)
         exit(1)
+    except requests.HTTPError, e:
+        print "Error reading HTTP response:" + str(e)
 
-except requests.ConnectionError, e:
-    print "Error fetching page:" + str(e)
-    exit(1)
-except requests.HTTPError, e:
-    print "Error reading HTTP response:" + str(e)
+def get_json(url, id):
+    get = url + id
+    data = get_url(get)
+    return json.loads(data)
 
-soup = BeautifulSoup(data)
+def get_bandname(url):
+    data = get_url(url)
+    soup = BeautifulSoup(data)
+    proplist = soup.find('meta', {"property":'og:site_name', 'content':True})
+    if proplist:
+        return quote_plus(proplist['content'])
 
-proplist = soup.find('meta', {"property":'og:site_name', 'content':True})
-if proplist:
-    band = quote_plus(proplist['content'])
+# me this sucks, make it the other way
+# get_records -> return album_discs
+# for each records -
+#  -> get tracks
+# get singles -> return only singles
+def get_singles(band_id):
+    data = get_json(BC_API_RECORDS, band_id)
+    singles = []
+    if data['discography']:
+        for disc in data['discography']:
+            if not disc.has_key('album_id'):
+                if disc['track_id']:
+                     trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
+                     singles.append(trackinfo['streaming_url'])
 
-print "Band: " + band
-resp = requests.get(url="http://api.bandcamp.com/api/band/3/search?key=vatnajokull&name="+ band)
-js = json.loads(resp.content)
+        return singles
 
-if js['results']:
-    for result in js['results']:
-        band_id=result['band_id']
+def get_record_tracks(band_id):
+    data = get_json(BC_API_RECORDS, str(band_id))
+    records=[]
+    if data['discography']:
+        for disc in data['discography']:
+            if disc.has_key('album_id'):
+                records.append(disc['album_id'])
 
-print "BandID:" + str(band_id)
-
-resp = requests.get(url="http://api.bandcamp.com/api/band/3/discography?key=vatnajokull&band_id=" + str(band_id))
-js = json.loads(resp.content)
-
-records=[]
-if js['discography']:
-    for disc in js['discography']:
-        try:
-            records.append(disc['album_id'])
-            print "Found record:" + str(disc['album_id']) + "title:" + str(disc['title'])
-        except KeyError:
-            print "single:"
-            print disc['title']
-            if disc['track_id']:
-                resp = requests.get(url="http://api.bandcamp.com/api/track/3/info?key=vatnajokull&track_id=" + str(disc['track_id']))
-                js = json.loads(resp.content)
-                print js['streaming_url']
-            
-
-if len(records) > 0:
-    print "download tracks:"
+    tracks=[]
     for disc_id in records:
-        resp = requests.get(url="http://api.bandcamp.com/api/album/2/info?key=vatnajokull&album_id=" + str(disc_id))
-        js = json.loads(resp.content)
-        if js['tracks']:
-            for track in js['tracks']:
-                print track['title']
-                print track['streaming_url']
-else:
-    print "found no records to get"
+        disc = get_json(BC_API_ALBUM, str(disc_id))
+        if disc['tracks']:
+            for track in disc['tracks']:
+                tracks.append(track['streaming_url'])
+
+    return tracks
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", help="URL to bandpage on bandcamp", type=str, required=1)
+    parser.add_argument("--output", help="destination directory to write files in (default: download)", default="download")
+    parser.add_argument("--delimeter", help="replace space in filename with specified string, default: '_'", default="_")
+    args = parser.parse_args()
+
+    if not path.exists(args.output):
+        print "Creating output directory"
+        try:
+            mkdir(args.output)
+        except OSError, e:
+            print "Error creating directory:" + e.strerror
+
+    band_name = get_bandname(args.url)
+    print "Band name" + band_name
+
+    band_data = get_json(BC_API_BANDID, band_name)
+    if band_data['results']:
+        for result in band_data['results']:
+            band_id = result['band_id']
+
+    print "Band ID" + str(band_id)
+    singles = get_singles(str(band_id))
+    print singles
+    record_tracks = get_record_tracks(str(band_id))
+    print record_tracks
