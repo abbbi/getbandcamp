@@ -40,6 +40,8 @@ def get_bandname(url):
     proplist = soup.find('meta', {"property":'og:site_name', 'content':True})
     if proplist:
         return proplist['content']
+    else:
+        return False
 
 def get_record_tracks(band_id):
     data = get_json(BC_API_RECORDS, str(band_id))
@@ -78,10 +80,10 @@ def trackinfo(record_tracks):
 
     if len(record_tracks) > 0:
         for record in record_tracks:
-                if record != "singles":
-                        print record
-                        for track in record_tracks[record]:
-                                print " + " + track
+            if record != "singles":
+                print record
+                for track in record_tracks[record]:
+                    print " + " + track
 
 
 def download_tracks(tracklist, delimeter, directory, album, band_name):
@@ -107,6 +109,7 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
                         makedirs(target_dir)
                 except OSError, e:
                         print "Error creating directory:" + e.strerror
+                        exit(1)
 
         if path.exists(target_file):
                 print "Skipping, file already exists"
@@ -121,23 +124,32 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
                 print "Error reading HTTP response:" + str(e)
 
         if r.status_code == requests.codes.ok:
+            try:
                 with open(target_file, "wb") as fh:
-                        try:
-                                for block in r.iter_content(1024):
-                                        if not block:
-                                                print "error downloading"
-                                                break
-                                        fh.write(block)
-                        except KeyboardInterrupt:
-                                print "aborted"
+                    try:
+                        for block in r.iter_content(1024):
+                            if not block:
+                                print "error downloading"
+                                break
+                                try:
+                                    fh.write(block)
+                                except IOError,e:
+                                    print "Unable to write output data" + str(e.strerror)
+                                    exit(1)
+                    except KeyboardInterrupt:
+                        print "aborted"
+                        exit(0)
 
-                        fh.close
+                    fh.close
 
                 id = ID3(target_file)
                 id['ARTIST'] = band_name
                 id['TITLE'] = track
                 id["ALBUM"] = album
                 id.write
+            except IOError, e:
+                print "Unable to open output file" + str(e.strerror)
+
         else:
                 print "Error downloading track, http code: " + resp.status_code
 
@@ -159,16 +171,28 @@ if __name__ == "__main__":
             print "Error creating directory:" + e.strerror
 
     band_name = get_bandname(args.url)
-    print "Band name: " + band_name
+    if band_name != False:
+        print "Band name: " + band_name
+    else:
+        print "Unable to fetch band name from page"
+        exit(1)
 
     band_data = get_json(BC_API_BANDID, quote_plus(band_name))
-    if band_data['results']:
+    if len(band_data['results']) > 0:
         for result in band_data['results']:
             band_id = result['band_id']
+    else:
+        print "Unable to get band id, site changed?"
+        exit(1)
 
     print "Band API ID " + str(band_id)
     record_tracks = get_record_tracks(str(band_id))
-    trackinfo(record_tracks)
+    if len(record_tracks) > 0:
+        trackinfo(record_tracks)
+    else:
+        print "Bandcamp API did not respond with any records or band has no open records"
+        exit(1)
+
     if args.download == "no" and args.singles == "no":
         exit(1)
 
