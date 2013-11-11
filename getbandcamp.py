@@ -16,13 +16,13 @@ BC_API_TRACKS="http://api.bandcamp.com/api/track/3/info?key=vatnajokull&track_id
 
 def get_url(url):
     try:
-            resp = requests.get(url=url)
-            if resp.status_code == requests.codes.ok:
-                data = resp.content
-                return data
-            else:
-                print "Error fetching page, error:" + str(resp.status_code)
-                exit(1)
+        resp = requests.get(url=url)
+        if resp.status_code == requests.codes.ok:
+            data = resp.content
+            return data
+        else:
+            print "Error fetching page, error:" + str(resp.status_code)
+            exit(1)
     except requests.ConnectionError, e:
         print "Error fetching page:" + str(e)
         exit(1)
@@ -53,9 +53,9 @@ def get_record_tracks(band_id):
                 records.append(disc['album_id'])
             else:
                 if disc['track_id']:
-                        trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
-                        record['singles'][trackinfo['title']] = {}
-                        record['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
+                    trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
+                    record['singles'][trackinfo['title']] = {}
+                    record['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
 
     #record = {}
     for disc_id in records:
@@ -92,10 +92,10 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
     count=0
     for track in tracklist:
         if tracklist[track].has_key('number'):
-                track_id = str(tracklist[track]['number']).zfill(2)
+            track_id = str(tracklist[track]['number']).zfill(2)
         else:
-                count=count+1
-                track_id=str(count).zfill(2)
+            count=count+1
+            track_id=str(count).zfill(2)
 
         fixed_name = track.replace(" ", delimeter)
 
@@ -105,23 +105,23 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
         print "Downloading: " + track + " URL: " + tracklist[track]['url'] + " To: " + target_file
 
         if not path.exists(target_dir):
-                try:
-                        makedirs(target_dir)
-                except OSError, e:
-                        print "Error creating directory:" + e.strerror
-                        exit(1)
+            try:
+                makedirs(target_dir)
+            except OSError, e:
+                print "Error creating directory:" + e.strerror
+                exit(1)
 
         if path.exists(target_file):
-                print "Skipping, file already exists"
-                continue
-
+            print "Skipping, file already exists"
+            continue
+    
         try:
-                r = requests.get(url=tracklist[track]['url'])
+            r = requests.get(url=tracklist[track]['url'])
         except requests.ConnectionError, e:
-                print "Error fetching page:" + str(e)
-                exit(1)
+            print "Error fetching page:" + str(e)
+            exit(1)
         except requests.HTTPError, e:
-                print "Error reading HTTP response:" + str(e)
+            print "Error reading HTTP response:" + str(e)
 
         if r.status_code == requests.codes.ok:
             try:
@@ -149,7 +149,6 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
                 id.write
             except IOError, e:
                 print "Unable to open output file" + str(e.strerror)
-
         else:
                 print "Error downloading track, http code: " + resp.status_code
 
@@ -198,18 +197,18 @@ if __name__ == "__main__":
 
     if args.singles == True:
         if len(record_tracks['singles']) > 0:
-                download_tracks(record_tracks['singles'], args.delimeter, args.output,"singles", band_name)
-                exit(0)
+            download_tracks(record_tracks['singles'], args.delimeter, args.output,"singles", band_name)
+            exit(0)
         else:
-                print "no singles found for downloading"
-                exit(1)
+            print "no singles found for downloading"
+            exit(1)
 
     if args.album != "all":
         if record_tracks.has_key(args.album):
-                print "\nDownloading album:\n" + args.album
-                download_tracks(record_tracks[args.album], args.delimeter, args.output,args.album, band_name)
+            print "\nDownloading album:\n" + args.album
+            download_tracks(record_tracks[args.album], args.delimeter, args.output,args.album, band_name)
         else:
-                print "Specified album not found in recordlist"
+            print "Specified album not found in recordlist"
     else:
         for record in record_tracks:
-                download_tracks(record_tracks[record], args.delimeter, args.output,record, band_name)
+            download_tracks(record_tracks[record], args.delimeter, args.output,record, band_name)
