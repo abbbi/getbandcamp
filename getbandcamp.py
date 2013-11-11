@@ -41,36 +41,24 @@ def get_bandname(url):
     if proplist:
         return proplist['content']
 
-# me this sucks, make it the other way
-# get_records -> return album_discs
-# for each records -
-#  -> get tracks
-# get singles -> return only singles
-def get_singles(band_id):
-    data = get_json(BC_API_RECORDS, band_id)
-    singles = { 'singles': {} }
-    if data['discography']:
-        for disc in data['discography']:
-            if not disc.has_key('album_id'):
-                if disc['track_id']:
-                     trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
-                     singles['singles'][trackinfo['title']] = {}
-                     if trackinfo['downloadable'] == 2:
-                        singles['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
-                     else:
-                        singles['singles'][trackinfo['title']] = { 'url':  trackinfo['streaming_url'] }
-
-        return singles
-
 def get_record_tracks(band_id):
     data = get_json(BC_API_RECORDS, str(band_id))
-    records=[]
+    record = { 'singles' : {} }
+    records = []
     if data['discography']:
         for disc in data['discography']:
             if disc.has_key('album_id'):
                 records.append(disc['album_id'])
+            else:
+                if disc['track_id']:
+                        trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
+                        record['singles'][trackinfo['title']] = {}
+                        if trackinfo['downloadable'] == 2:
+                                record['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
+                        else:
+                                record['singles'][trackinfo['title']] = { 'url':  trackinfo['streaming_url'] }
 
-    record = {}
+    #record = {}
     for disc_id in records:
         disc = get_json(BC_API_ALBUM, str(disc_id))
         record[disc['title']] = {}
@@ -85,11 +73,11 @@ def get_record_tracks(band_id):
 
     return record
 
-def trackinfo(singles, record_tracks):
+def trackinfo(record_tracks):
     print "Found following singles:\n"
 
-    if len(singles['singles']) > 0:
-        for single in singles['singles']:
+    if len(record_tracks['singles']) > 0:
+        for single in record_tracks['singles']:
                 print single
     else:
         print "No singles found"
@@ -98,9 +86,10 @@ def trackinfo(singles, record_tracks):
 
     if len(record_tracks) > 0:
         for record in record_tracks:
-                print record
-                for track in record_tracks[record]:
-                        print " + " + track
+                if record != "singles":
+                        print record
+                        for track in record_tracks[record]:
+                                print " + " + track
 
 
 def download_tracks(tracklist, delimeter, directory, album, band_name):
@@ -186,15 +175,14 @@ if __name__ == "__main__":
             band_id = result['band_id']
 
     print "Band API ID " + str(band_id)
-    singles = get_singles(str(band_id))
     record_tracks = get_record_tracks(str(band_id))
-    trackinfo(singles,record_tracks)
+    trackinfo(record_tracks)
     if args.download == "no" and args.singles == "no":
         exit(1)
 
     if args.singles == "yes":
-        if len(singles) > 0:
-                download_tracks(singles['singles'], args.delimeter, args.output,"singles", band_name)
+        if len(record_tracks['singles']) > 0:
+                download_tracks(record_tracks['singles'], args.delimeter, args.output,"singles", band_name)
                 exit(0)
         else:
                 print "no singles found for downloading"
