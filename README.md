@@ -1,9 +1,8 @@
 getbandcamp
 ===========
 
-Download mp3 streams vom bandcamp.com, to a specified directory and mp3 TAG
+Download mp3 streams vom bandcamp.com to a specified directory and mp3 TAG
 accordingly
-
 
 USAGE
 ------------
@@ -50,6 +49,8 @@ DEPENDENCIES
 ------------
 additional packages may have to be installed (debian):
 
+<pre>
  pyhont-id3
  python-bs4
  python-requests
+</pre>
