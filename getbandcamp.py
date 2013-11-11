@@ -57,7 +57,7 @@ def get_singles(band_id):
                      if trackinfo['downloadable'] == 2:
                         singles['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
                      else:
-                        singles['singles'][trackinfo['title']] = { 'url':  trackinfo['url'] }
+                        singles['singles'][trackinfo['title']] = { 'url':  trackinfo['streaming_url'] }
 
         return singles
 
@@ -78,15 +78,16 @@ def get_record_tracks(band_id):
             if track['downloadable'] == 2:
                 record[disc['title']][track['title']]['url'] = track['streaming_url']
             else:
-                record[disc['title']][track['title']]['url'] = track['url']
+                # todo: probably get real download url if track is free, for now just
+                # use the streaming url
+                record[disc['title']][track['title']]['url'] = track['streaming_url']
 
     return record
 
 def trackinfo(singles, record_tracks):
     print "Found following singles:\n"
-    print singles
 
-    if len(singles) > 0:
+    if len(singles['singles']) > 0:
         for single in singles['singles']:
                 print single
     else:

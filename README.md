@@ -1,8 +1,8 @@
 getbandcamp
 ===========
 
-Download free mp3's and streams vom bandcamp.com, to a specified directory and
-mp3 TAG accordingly
+Download mp3 streams vom bandcamp.com, to a specified directory and mp3 TAG
+accordingly
 
 
 USAGE
