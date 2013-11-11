@@ -52,3 +52,4 @@ additional packages may have to be installed (debian):
 
  pyhont-id3
  python-bs4
+ python-requests
