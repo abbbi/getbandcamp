@@ -8,6 +8,7 @@ from sys import exit
 from os import mkdir, path, makedirs
 from ID3 import *
 
+# see: http://bandcamp.com/developer
 BC_API_BANDID="http://api.bandcamp.com/api/band/3/search?key=vatnajokull&name="
 BC_API_RECORDS="http://api.bandcamp.com/api/band/3/discography?key=vatnajokull&band_id="
 BC_API_ALBUM="http://api.bandcamp.com/api/album/2/info?key=vatnajokull&album_id="

@@ -40,7 +40,7 @@ Download all records from a band URL:
  
  python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --download yes
 
-Download only singles from a band ULR:
+Download only singles from a band URL:
 
  python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --singles yes
 
