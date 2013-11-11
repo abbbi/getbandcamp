@@ -7,22 +7,23 @@ mp3 TAG accordingly
 
 USAGE
 ------------
- usage: getbandcamp.py [-h] --url URL [--output OUTPUT] [--download {yes,no}]
-                       [--album ALBUM] [--singles {yes,no}]
-                       [--delimeter DELIMETER]
- 
- optional arguments:
-   -h, --help            show this help message and exit
-   --url URL             URL to bandpage on bandcamp
-   --output OUTPUT       destination directory to write files in (default:
-                         download)
-   --download {yes,no}   download stuff, default is only to show records and
-                         singles
-   --album ALBUM         download only specified album, default: all
-   --singles {yes,no}    download only singles
-   --delimeter DELIMETER
-                         replace space in filename with specified string,
-                         default: '_'
+usage: getbandcamp.py [-h] --url URL [--output OUTPUT] [--download {yes,no}]
+                      [--album ALBUM] [--singles {yes,no}]
+                      [--delimeter DELIMETER]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --url URL             URL to bandpage on bandcamp
+  --output OUTPUT       destination directory to write files in (default:
+                        download)
+  --download {yes,no}   download stuff, default is only to show records and
+                        singles
+  --album ALBUM         download only specified album, default: all
+  --singles {yes,no}    download only singles
+  --delimeter DELIMETER
+                        replace space in filename with specified string,
+                        default: '_'
+
 
 
 EXAMPLES
