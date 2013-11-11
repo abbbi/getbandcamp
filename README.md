@@ -1,4 +1,52 @@
 getbandcamp
 ===========
 
-bandcamp download, not yet finished
+Download free mp3's and streams vom bandcamp.com, to a specified directory and
+mp3 TAG accordingly
+
+
+USAGE
+------------
+ usage: getbandcamp.py [-h] --url URL [--output OUTPUT] [--download {yes,no}]
+                       [--album ALBUM] [--singles {yes,no}]
+                       [--delimeter DELIMETER]
+ 
+ optional arguments:
+   -h, --help            show this help message and exit
+   --url URL             URL to bandpage on bandcamp
+   --output OUTPUT       destination directory to write files in (default:
+                         download)
+   --download {yes,no}   download stuff, default is only to show records and
+                         singles
+   --album ALBUM         download only specified album, default: all
+   --singles {yes,no}    download only singles
+   --delimeter DELIMETER
+                         replace space in filename with specified string,
+                         default: '_'
+
+
+EXAMPLES
+------------
+List available singles and records for band URL:
+
+ python getbandcamp.py --url http://myband.bandcamp.com/
+
+Download only a specifing record from band URL:
+
+ python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --album "Record Name" --download yes
+
+Download all records from a band URL:
+ 
+ python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --download yes
+
+Download only singles from a band ULR:
+
+ python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --singles yes
+
+
+DEPENDENCIES
+------------
+additional packages may have to be installed (debian):
+
+ pyhont-id3
+ python-bs4

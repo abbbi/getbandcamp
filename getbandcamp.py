@@ -3,11 +3,10 @@ import argparse
 import json
 import requests
 from bs4 import BeautifulSoup
-from urllib import quote_plus
+from urllib import quote_plus,unquote
 from sys import exit
-from os import mkdir, path
-
-# python getbandcamp.py --url http://usroyalty.bandcamp.com --output destdir
+from os import mkdir, path, makedirs
+from ID3 import *
 
 BC_API_BANDID="http://api.bandcamp.com/api/band/3/search?key=vatnajokull&name="
 BC_API_RECORDS="http://api.bandcamp.com/api/band/3/discography?key=vatnajokull&band_id="
@@ -39,7 +38,7 @@ def get_bandname(url):
     soup = BeautifulSoup(data)
     proplist = soup.find('meta', {"property":'og:site_name', 'content':True})
     if proplist:
-        return quote_plus(proplist['content'])
+        return proplist['content']
 
 # me this sucks, make it the other way
 # get_records -> return album_discs
@@ -48,13 +47,17 @@ def get_bandname(url):
 # get singles -> return only singles
 def get_singles(band_id):
     data = get_json(BC_API_RECORDS, band_id)
-    singles = {}
+    singles = { 'singles': {} }
     if data['discography']:
         for disc in data['discography']:
             if not disc.has_key('album_id'):
                 if disc['track_id']:
                      trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
-                     singles[trackinfo['title']] = trackinfo['streaming_url'];
+                     singles['singles'][trackinfo['title']] = {}
+                     if trackinfo['downloadable'] == 2:
+                        singles['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
+                     else:
+                        singles['singles'][trackinfo['title']] = { 'url':  trackinfo['url'] }
 
         return singles
 
@@ -71,15 +74,91 @@ def get_record_tracks(band_id):
         disc = get_json(BC_API_ALBUM, str(disc_id))
         record[disc['title']] = {}
         for track in disc['tracks']:
-            record[disc['title']][track['title']] = track['streaming_url']
+            record[disc['title']][track['title']] = { 'number': track['number'] }
+            if track['downloadable'] == 2:
+                record[disc['title']][track['title']]['url'] = track['streaming_url']
+            else:
+                record[disc['title']][track['title']]['url'] = track['url']
 
     return record
+
+def trackinfo(singles, record_tracks):
+    print "Found following singles:\n"
+    print singles
+
+    if len(singles) > 0:
+        for single in singles['singles']:
+                print single
+    else:
+        print "No singles found"
+
+    print "\nFound following records:\n"
+
+    if len(record_tracks) > 0:
+        for record in record_tracks:
+                print record
+                for track in record_tracks[record]:
+                        print " + " + track
+
+
+def download_tracks(tracklist, delimeter, directory, album, band_name):
+    fixed_album_name = album.replace(" ", delimeter)
+    fixed_band_name = band_name.replace(" ", delimeter)
+    for track in tracklist:
+        fixed_name = track.replace(" ", delimeter)
+
+        target_dir = directory + "/" + fixed_band_name + "/" + fixed_album_name 
+        target_file = target_dir + "/" + fixed_name + ".mp3"
+        
+        print "Download: " + track + "URL: " + tracklist[track]['url'] + " To: " + target_file
+
+        if not path.exists(target_dir):
+                try:
+                        makedirs(target_dir)
+                except OSError, e:
+                        print "Error creating directory:" + e.strerror
+
+        if path.exists(target_file):
+                print "Skpping, file already exists"
+                next 
+
+        try:
+                r = requests.get(url=tracklist[track]['url'])
+        except requests.ConnectionError, e:
+                print "Error fetching page:" + str(e)
+                exit(1)
+        except requests.HTTPError, e:
+                print "Error reading HTTP response:" + str(e)
+
+        if r.status_code == requests.codes.ok:
+                with open(target_file, "wb") as fh:
+                        try:
+                                for block in r.iter_content(1024):
+                                        if not block:
+                                                print "error downloading"
+                                                break
+                                        fh.write(block)
+                        except KeyboardInterrupt:
+                                print "aborted"
+
+                        fh.close
+
+                id = ID3(target_file)
+                id['ARTIST'] = band_name
+                id['TITLE'] = track
+                id["ALBUM"] = album
+                id.write
+        else:
+                print "Error downloading track, http code: " + resp.status_code
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", help="URL to bandpage on bandcamp", type=str, required=1)
     parser.add_argument("--output", help="destination directory to write files in (default: download)", default="download")
-    parser.add_argument("--delimeter", help="replace space in filename with specified string, default: '_'", default="_")
+    parser.add_argument("--download", help="download stuff, default is only to show records and singles", default="no", choices=['yes', 'no'], type=str)
+    parser.add_argument("--album", help="download only specified album, default: all", default="all", type=str)
+    parser.add_argument("--singles", help="download only singles", default="no", choices=['yes', 'no'])
+    parser.add_argument("--delimeter", help="replace space in filename with specified string, default: '_'", default="_", type=str)
     args = parser.parse_args()
 
     if not path.exists(args.output):
@@ -90,15 +169,34 @@ if __name__ == "__main__":
             print "Error creating directory:" + e.strerror
 
     band_name = get_bandname(args.url)
-    print "Band name" + band_name
+    print "Band name: " + band_name
 
-    band_data = get_json(BC_API_BANDID, band_name)
+    band_data = get_json(BC_API_BANDID, quote_plus(band_name))
     if band_data['results']:
         for result in band_data['results']:
             band_id = result['band_id']
 
-    print "Band ID" + str(band_id)
+    print "Band API ID " + str(band_id)
     singles = get_singles(str(band_id))
-    print singles
     record_tracks = get_record_tracks(str(band_id))
-    print record_tracks
+    trackinfo(singles,record_tracks)
+    if args.download == "no" and args.singles == "no":
+        exit(1)
+
+    if args.singles == "yes":
+        if len(singles) > 0:
+                download_tracks(singles['singles'], args.delimeter, args.output,"singles", band_name)
+                exit(0)
+        else:
+                print "no singles found for downloading"
+                exit(1)
+
+    if args.album != "all":
+        if record_tracks.has_key(args.album):
+                print "\nDownloading album:\n" + args.album
+                download_tracks(record_tracks[args.album], args.delimeter, args.output,args.album, band_name)
+        else:
+                print "Specified album not found in recordlist"
+    else:
+        for record in record_tracks:
+                download_tracks(record_tracks[record], args.delimeter, args.output,record, band_name)
