@@ -53,10 +53,7 @@ def get_record_tracks(band_id):
                 if disc['track_id']:
                         trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
                         record['singles'][trackinfo['title']] = {}
-                        if trackinfo['downloadable'] == 2:
-                                record['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
-                        else:
-                                record['singles'][trackinfo['title']] = { 'url':  trackinfo['streaming_url'] }
+                        record['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
 
     #record = {}
     for disc_id in records:
@@ -64,12 +61,7 @@ def get_record_tracks(band_id):
         record[disc['title']] = {}
         for track in disc['tracks']:
             record[disc['title']][track['title']] = { 'number': track['number'] }
-            if track['downloadable'] == 2:
-                record[disc['title']][track['title']]['url'] = track['streaming_url']
-            else:
-                # todo: probably get real download url if track is free, for now just
-                # use the streaming url
-                record[disc['title']][track['title']]['url'] = track['streaming_url']
+            record[disc['title']][track['title']]['url'] = track['streaming_url']
 
     return record
 
