@@ -51,8 +51,7 @@ def get_record_tracks(band_id):
         for disc in data['discography']:
             if disc.has_key('album_id'):
                 records.append(disc['album_id'])
-            else:
-                if disc['track_id']:
+            elif disc['track_id']:
                     trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
                     record['singles'][trackinfo['title']] = {}
                     record['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
@@ -140,7 +139,7 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
                         print "aborted"
                         exit(0)
 
-                    fh.close
+                fh.close
 
                 id = ID3(target_file)
                 id['ARTIST'] = band_name
