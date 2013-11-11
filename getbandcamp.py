@@ -106,13 +106,20 @@ def trackinfo(singles, record_tracks):
 def download_tracks(tracklist, delimeter, directory, album, band_name):
     fixed_album_name = album.replace(" ", delimeter)
     fixed_band_name = band_name.replace(" ", delimeter)
+    count=0
     for track in tracklist:
+        if tracklist[track].has_key('number'):
+                track_id = str(tracklist[track]['number']).zfill(2)
+        else:
+                count=count+1
+                track_id=str(count).zfill(2)
+
         fixed_name = track.replace(" ", delimeter)
 
         target_dir = directory + "/" + fixed_band_name + "/" + fixed_album_name 
-        target_file = target_dir + "/" + fixed_name + ".mp3"
+        target_file = target_dir + "/" +track_id + delimeter + fixed_name + ".mp3"
         
-        print "Download: " + track + "URL: " + tracklist[track]['url'] + " To: " + target_file
+        print "Downloading: " + track + " URL: " + tracklist[track]['url'] + " To: " + target_file
 
         if not path.exists(target_dir):
                 try:
@@ -121,8 +128,8 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
                         print "Error creating directory:" + e.strerror
 
         if path.exists(target_file):
-                print "Skpping, file already exists"
-                next 
+                print "Skipping, file already exists"
+                continue
 
         try:
                 r = requests.get(url=tracklist[track]['url'])
