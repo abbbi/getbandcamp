@@ -7,6 +7,7 @@ accordingly
 
 USAGE
 ------------
+<pre>
 usage: getbandcamp.py [-h] --url URL [--output OUTPUT] [--download {yes,no}]
                       [--album ALBUM] [--singles {yes,no}]
                       [--delimeter DELIMETER]
@@ -23,7 +24,7 @@ optional arguments:
   --delimeter DELIMETER
                         replace space in filename with specified string,
                         default: '_'
-
+</pre>
 
 
 EXAMPLES
@@ -32,7 +33,7 @@ List available singles and records for band URL:
 
  python getbandcamp.py --url http://myband.bandcamp.com/
 
-Download only a specifing record from band URL:
+Download only a specified record from band URL:
 
  python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --album "Record Name" --download yes
 
