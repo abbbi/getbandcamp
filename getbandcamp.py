@@ -157,9 +157,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", help="URL to bandpage on bandcamp", type=str, required=1)
     parser.add_argument("--output", help="destination directory to write files in (default: download)", default="download")
-    parser.add_argument("--download", help="download stuff, default is only to show records and singles", default="no", choices=['yes', 'no'], type=str)
+    parser.add_argument("--download", help="download stuff, default is only to show records and singles", action="store_true")
+    parser.add_argument("--singles", help="download only singles", action="store_true")
     parser.add_argument("--album", help="download only specified album, default: all", default="all", type=str)
-    parser.add_argument("--singles", help="download only singles", default="no", choices=['yes', 'no'])
     parser.add_argument("--delimeter", help="replace space in filename with specified string, default: '_'", default="_", type=str)
     args = parser.parse_args()
 
@@ -193,10 +193,10 @@ if __name__ == "__main__":
         print "Bandcamp API did not respond with any records or band has no open records"
         exit(1)
 
-    if args.download == "no" and args.singles == "no":
+    if args.download == False and args.singles == False:
         exit(1)
 
-    if args.singles == "yes":
+    if args.singles == True:
         if len(record_tracks['singles']) > 0:
                 download_tracks(record_tracks['singles'], args.delimeter, args.output,"singles", band_name)
                 exit(0)

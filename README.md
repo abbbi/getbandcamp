@@ -7,19 +7,18 @@ accordingly
 USAGE
 ------------
 <pre>
-usage: getbandcamp.py [-h] --url URL [--output OUTPUT] [--download {yes,no}]
-                      [--album ALBUM] [--singles {yes,no}]
-                      [--delimeter DELIMETER]
+usage: getbandcamp.py [-h] --url URL [--output OUTPUT] [--download]
+                      [--singles] [--album ALBUM] [--delimeter DELIMETER]
 
 optional arguments:
   -h, --help            show this help message and exit
   --url URL             URL to bandpage on bandcamp
   --output OUTPUT       destination directory to write files in (default:
                         download)
-  --download {yes,no}   download stuff, default is only to show records and
+  --download            download stuff, default is only to show records and
                         singles
+  --singles             download only singles
   --album ALBUM         download only specified album, default: all
-  --singles {yes,no}    download only singles
   --delimeter DELIMETER
                         replace space in filename with specified string,
                         default: '_'
@@ -34,15 +33,15 @@ List available singles and records for band URL:
 
 Download only a specified record from band URL:
 
- python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --album "Record Name" --download yes
+ python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --album "Record Name" --download
 
 Download all records and singles from a band URL:
  
- python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --download yes
+ python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --download
 
 Download only singles from a band URL:
 
- python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --singles yes
+ python getbandcamp.py --url http://myband.bandcamp.com/ --output destdir --singles
 
 
 DEPENDENCIES
