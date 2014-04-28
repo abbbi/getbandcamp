@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import argparse
 import json
 import requests
@@ -52,9 +52,9 @@ def get_record_tracks(band_id):
             if disc.has_key('album_id'):
                 records.append(disc['album_id'])
             elif disc['track_id']:
-                    trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
-                    record['singles'][trackinfo['title']] = {}
-                    record['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
+                trackinfo = get_json(BC_API_TRACKS, str(disc['track_id']))
+                record['singles'][trackinfo['title']] = {}
+                record['singles'][trackinfo['title']] = { 'url' : trackinfo['streaming_url'] }
 
     #record = {}
     for disc_id in records:
@@ -71,7 +71,7 @@ def trackinfo(record_tracks):
 
     if len(record_tracks['singles']) > 0:
         for single in record_tracks['singles']:
-                print single
+            print single
     else:
         print "No singles found"
 
@@ -98,9 +98,9 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
 
         fixed_name = track.replace(" ", delimeter)
 
-        target_dir = directory + "/" + fixed_band_name + "/" + fixed_album_name 
+        target_dir = directory + "/" + fixed_band_name + "/" + fixed_album_name
         target_file = target_dir + "/" +track_id + delimeter + fixed_name + ".mp3"
-        
+
         print "Downloading: " + track + " URL: " + tracklist[track]['url'] + " To: " + target_file
 
         if not path.exists(target_dir):
@@ -113,9 +113,11 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
         if path.exists(target_file):
             print "Skipping, file already exists"
             continue
-    
+
+
+        user_agent = {'User-agent': 'Mozilla/5.0'}
         try:
-            r = requests.get(url=tracklist[track]['url'])
+            r = requests.get(url=tracklist[track]['url'], headers = user_agent)
         except requests.ConnectionError, e:
             print "Error fetching page:" + str(e)
             exit(1)
@@ -127,14 +129,11 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
                 with open(target_file, "wb") as fh:
                     try:
                         for block in r.iter_content(1024):
-                            if not block:
-                                print "error downloading"
-                                break
-                                try:
-                                    fh.write(block)
-                                except IOError,e:
-                                    print "Unable to write output data" + str(e.strerror)
-                                    exit(1)
+                            try:
+                                fh.write(block)
+                            except IOError,e:
+                                print "Unable to write output data" + str(e.strerror)
+                                exit(1)
                     except KeyboardInterrupt:
                         print "aborted"
                         exit(0)
@@ -149,7 +148,7 @@ def download_tracks(tracklist, delimeter, directory, album, band_name):
             except IOError, e:
                 print "Unable to open output file" + str(e.strerror)
         else:
-                print "Error downloading track, http code: " + resp.status_code
+            print "Error downloading track, http code: " + resp.status_code
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
