@@ -9,10 +9,10 @@ from os import mkdir, path, makedirs
 from ID3 import *
 
 # see: http://bandcamp.com/developer
-BC_API_BANDID="http://api.bandcamp.com/api/band/3/search?key=vatnajokull&name="
-BC_API_RECORDS="http://api.bandcamp.com/api/band/3/discography?key=vatnajokull&band_id="
-BC_API_ALBUM="http://api.bandcamp.com/api/album/2/info?key=vatnajokull&album_id="
-BC_API_TRACKS="http://api.bandcamp.com/api/track/3/info?key=vatnajokull&track_id="
+BC_API_BANDID="http://api.bandcamp.com/api/band/3/search?key=jokull&name="
+BC_API_RECORDS="http://api.bandcamp.com/api/band/3/discography?key=jokull&band_id="
+BC_API_ALBUM="http://api.bandcamp.com/api/album/2/info?key=jokull&album_id="
+BC_API_TRACKS="http://api.bandcamp.com/api/track/3/info?key=jokull&track_id="
 
 def get_url(url):
     try:
@@ -176,6 +176,10 @@ if __name__ == "__main__":
         exit(1)
 
     band_data = get_json(BC_API_BANDID, quote_plus(band_name))
+    if band_data['error']:
+        print "Error fetching band data: " + band_data['error_message']
+        exit(1)
+
     if len(band_data['results']) > 0:
         for result in band_data['results']:
             band_id = result['band_id']
