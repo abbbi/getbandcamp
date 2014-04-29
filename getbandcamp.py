@@ -8,11 +8,15 @@ from sys import exit
 from os import mkdir, path, makedirs
 from ID3 import *
 
+
+# dont ask, google will help you
+BC_API_KEY=""
+
 # see: http://bandcamp.com/developer
-BC_API_BANDID="http://api.bandcamp.com/api/band/3/search?key=jokull&name="
-BC_API_RECORDS="http://api.bandcamp.com/api/band/3/discography?key=jokull&band_id="
-BC_API_ALBUM="http://api.bandcamp.com/api/album/2/info?key=jokull&album_id="
-BC_API_TRACKS="http://api.bandcamp.com/api/track/3/info?key=jokull&track_id="
+BC_API_BANDID="http://api.bandcamp.com/api/band/3/search?key=" + BC_API_KEY + "&name="
+BC_API_RECORDS="http://api.bandcamp.com/api/band/3/discography?key=" + BC_API_KEY + "&band_id="
+BC_API_ALBUM="http://api.bandcamp.com/api/album/2/info?key=" + BC_API_KEY + "&album_id="
+BC_API_TRACKS="http://api.bandcamp.com/api/track/3/info?key=" + BC_API_KEY + "&track_id="
 
 def get_url(url):
     try:
@@ -62,7 +66,10 @@ def get_record_tracks(band_id):
         record[disc['title']] = {}
         for track in disc['tracks']:
             record[disc['title']][track['title']] = { 'number': track['number'] }
-            record[disc['title']][track['title']]['url'] = track['streaming_url']
+            if 'streaming_url' in track:
+                record[disc['title']][track['title']]['url'] = track['streaming_url']
+            else:
+                record[disc['title']][track['title']]['url'] = False
 
     return record
 
@@ -82,14 +89,22 @@ def trackinfo(record_tracks):
             if record != "singles":
                 print record
                 for track in record_tracks[record]:
-                    print " + " + track
+                    if record_tracks[record][track]['url'] != False:
+                        print " + " + track + " = download available"
+                    else:
+                        print " + " + track
 
+    print "\n"
 
 def download_tracks(tracklist, delimeter, directory, album, band_name):
     fixed_album_name = album.replace(" ", delimeter)
     fixed_band_name = band_name.replace(" ", delimeter)
     count=0
     for track in tracklist:
+        if tracklist[track]['url'] == False:
+            print "Track: " + track + " is not downloadable through stream, skipping"
+            continue
+
         if tracklist[track].has_key('number'):
             track_id = str(tracklist[track]['number']).zfill(2)
         else:
@@ -160,6 +175,11 @@ if __name__ == "__main__":
     parser.add_argument("--delimeter", help="replace space in filename with specified string, default: '_'", default="_", type=str)
     args = parser.parse_args()
 
+
+    if not BC_API_KEY:
+        print "Error: please set API key"
+        exit(1)
+
     if not path.exists(args.output):
         print "Creating output directory"
         try:
@@ -175,7 +195,7 @@ if __name__ == "__main__":
         exit(1)
 
     band_data = get_json(BC_API_BANDID, quote_plus(band_name))
-    if band_data['error']:
+    if 'error' in band_data:
         print "Error fetching band data: " + band_data['error_message']
         exit(1)
 

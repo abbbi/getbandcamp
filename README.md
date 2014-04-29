@@ -1,13 +1,13 @@
 getbandcamp
 ===========
 
-This is obsolete due bandcamp deactivating their key which they leaked
-in their documentation and they dont hand out new keys currently :(
-
-..
-
 Download mp3 streams vom bandcamp.com to a specified directory and mp3 TAG
 accordingly
+
+You need at least a bandcamp API KEY to be set in the source, the key from
+the documentation does not help anymore, however, google may probably
+help you to find a key ;))
+
 
 USAGE
 ------------
