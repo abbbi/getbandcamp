@@ -89,8 +89,8 @@ def trackinfo(record_tracks):
             if record != "singles":
                 print record
                 for track in record_tracks[record]:
-                    if record_tracks[record][track]['url'] != False:
-                        print " + " + track + " = download available"
+                    if record_tracks[record][track]['url'] == False:
+                        print " + " + track + " (not available for download)"
                     else:
                         print " + " + track
 
