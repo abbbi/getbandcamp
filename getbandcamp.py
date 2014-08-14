@@ -200,8 +200,23 @@ if __name__ == "__main__":
         exit(1)
 
     if len(band_data['results']) > 0:
+        print "found multiple bands with the same name:"
+        cnt = 0;
         for result in band_data['results']:
-            band_id = result['band_id']
+            print result['url'] + " id: " + str(cnt)
+            cnt = cnt+1
+        try:
+            id = int(raw_input('please enter which band ID to use:'))
+            print "ID: " + str(id)
+        except ValueError:
+            print "Given ID is not an integer"
+            exit(1)
+
+        try:
+            band_id = band_data['results'][id]['band_id']
+        except IndexError:
+            print "error: cannot find band with given ID"
+            exit(1)
     else:
         print "Unable to get band id, site changed?"
         exit(1)
