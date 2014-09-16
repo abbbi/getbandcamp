@@ -199,7 +199,7 @@ if __name__ == "__main__":
         print "Error fetching band data: " + band_data['error_message']
         exit(1)
 
-    if len(band_data['results']) > 0:
+    if len(band_data['results']) > 1:
         print "found multiple bands with the same name:"
         cnt = 0;
         for result in band_data['results']:
@@ -211,14 +211,13 @@ if __name__ == "__main__":
         except ValueError:
             print "Given ID is not an integer"
             exit(1)
-
-        try:
-            band_id = band_data['results'][id]['band_id']
-        except IndexError:
-            print "error: cannot find band with given ID"
-            exit(1)
     else:
-        print "Unable to get band id, site changed?"
+        id=0
+
+    try:
+        band_id = band_data['results'][id]['band_id']
+    except IndexError:
+        print "error: cannot find band with given ID"
         exit(1)
 
     print "Band API ID " + str(band_id)
